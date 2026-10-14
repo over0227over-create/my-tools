@@ -16,7 +16,7 @@
 <div class="field-head"><label for="title">タイトル</label><button class="copy" id="copy-title">タイトルをコピー</button></div><input id="title" placeholder="記事のタイトルを入力" autocomplete="off">
 <div class="field-head"><label for="body">本文</label><button class="copy" id="copy-body">本文をコピー</button></div><textarea id="body" placeholder="完成した記事を貼り付けたり、ここで書いたりできます。"></textarea>
 <div class="meta"><span id="chars">本文 0文字</span><span>Ctrl / ⌘ ＋ S で保存</span></div>
-<div class="actions"><button class="primary" id="save">記事を保存</button><a href="https://note.com/" target="_blank" rel="noopener noreferrer">noteを開く ↗</a><button class="danger" id="delete" hidden>この記事を削除</button></div>
+<div class="actions"><button class="primary" id="save">記事を保存</button><button id="copy-note">note用データをコピー</button><a href="https://note.com/" target="_blank" rel="noopener noreferrer">noteを開く ↗</a><button class="danger" id="delete" hidden>この記事を削除</button></div>
 <p class="hint">編集後は「記事を保存」を押してください。記事はこの端末・このブラウザに保存されます。noteへの投稿は、コピーした文章をnoteに貼り付けて行います。</p></section>
 </main><footer>アカウント登録不要。入力した記事を外部へ送信しません。ブラウザのデータを消すと記事も消えるため、バックアップをご利用ください。</footer>
 <script>
@@ -37,6 +37,7 @@ function openArticle(id){if(!mayLeave())return;const a=articles.find(a=>a.id===i
 function fresh(){if(!mayLeave())return;currentId=null;$('title').value='';$('body').value='';dirty=false;updateState();renderList();$('title').focus()}
 function save(){const title=$('title').value,body=$('body').value;if(!title.trim()&&!body.trim()){say('タイトルか本文を入力してから保存してください。',true);return}const id=currentId||('article-'+Date.now()+'-'+Math.random().toString(36).slice(2));const article={id,title,body,updatedAt:new Date().toISOString()};const next=articles.filter(a=>a.id!==id).concat(article);if(persist(next)){currentId=id;dirty=false;updateState();renderList();say('記事を保存しました。')}}
 async function copyField(id){const field=$(id),text=field.value;if(!text){say('コピーする文章を入力してください。',true);return}try{if(!navigator.clipboard||!window.isSecureContext)throw Error('fallback');await navigator.clipboard.writeText(text)}catch(e){field.focus();field.select();let success=false;try{success=document.execCommand('copy')}catch(e){}if(!success){say('文章を選択しました。Ctrl＋C（Macは⌘＋C）でコピーしてください。',true);return}}say((id==='title'?'タイトル':'本文')+'をコピーしました。')}
+$('copy-note').onclick=async()=>{const data=JSON.stringify({format:'note-draft-v1',title:$('title').value,body:$('body').value});if(!$('title').value.trim()&&!$('body').value.trim()){say('タイトルか本文を入力してください。',true);return}try{await navigator.clipboard.writeText(data);say('note用データをコピーしました。noteの編集画面で下書き入力ヘルパーを開き、貼り付けてください。')}catch(e){const t=document.createElement('textarea');t.value=data;t.setAttribute('aria-label','note用記事データ');document.body.append(t);t.focus();t.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}if(ok){t.remove();say('note用データをコピーしました。')}else{say('ページ下部の記事データを選択しました。Ctrl＋Cでコピーしてください。',true);t.addEventListener('blur',()=>t.remove(),{once:true})}}};
 $('new').onclick=fresh;$('save').onclick=save;$('search').oninput=renderList;
 for(const id of ['title','body']){$(id).oninput=()=>{dirty=true;updateState()};$('copy-'+id).onclick=()=>copyField(id)}
 $('delete').onclick=()=>{if(!currentId||!confirm('この記事を削除しますか？削除すると元に戻せません。'))return;if(persist(articles.filter(a=>a.id!==currentId))){dirty=false;fresh();say('記事を削除しました。')}};

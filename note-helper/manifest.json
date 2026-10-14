@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "note 下書き入力ヘルパー",
+  "version": "0.1.0",
+  "description": "記事の作業机で作った文章を、開いているnoteの空の編集画面へまとめて入力します。",
+  "permissions": ["activeTab", "scripting"],
+  "action": {"default_popup": "popup.html", "default_title": "note 下書き入力ヘルパー"}
+}
